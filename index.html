@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuantum Dünyasına İlk Adım</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <!-- Background Particles/Stars -->
+    <div id="stars-container"></div>
+
+    <!-- App Container -->
+    <div id="app">
+        <!-- Navigation -->
+        <nav id="main-nav" class="glass-nav hidden">
+            <div class="logo">
+                <span class="neon-text">QUANTUM</span> FUTURE
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" data-view="home">Ana Sayfa</a></li>
+                <li><a href="#" data-view="presentation">Sunum</a></li>
+                <li><a href="#" data-view="lab">Laboratuvar</a></li>
+                <li><a href="#" data-view="quiz">Quiz</a></li>
+                <li><a href="#" data-view="dictionary">Sözlük</a></li>
+            </ul>
+            <div class="nav-controls">
+                <button id="toggle-mode" class="btn-secondary btn-sm">Öğrenci Modu</button>
+            </div>
+        </nav>
+
+        <!-- Home View -->
+        <section id="view-home" class="view active">
+            <div class="hero-content">
+                <h1 class="glitch-text">Kuantum Dünyasına İlk Adım</h1>
+                
+                <div class="authors-main">
+                    <div class="author">
+                        <strong>Prof. Dr. Ahmet ATAÇ</strong>
+                        <span>Marmara Üniversitesi</span>
+                    </div>
+                    <div class="author">
+                        <strong>Dr. Cumali Yaşar</strong>
+                        <span>Çanakkale Onsekiz Mart Üniversitesi</span>
+                    </div>
+                </div>
+
+                <div class="hero-actions">
+                    <button id="start-btn" class="btn-primary btn-lg">Başla</button>
+                    
+                    <div class="qr-box">
+                        <img src="qrcode_cyasar.github.io.png" alt="Erişim Kodu" class="qr-code">
+                        <span>Mobil Erişim</span>
+                    </div>
+                </div>
+
+                <div class="hero-footer">
+                    <div class="footer-logos">
+                        <img src="qnadco-logo.svg" alt="Quantum Logo" class="footer-logo">
+                        <div class="t3-support">
+                            <span>Destekleyen</span>
+                            <a href="https://www.t3vakfi.org/tr/" target="_blank">
+                                <img src="Turkiye-Teknoloji-Takimi-Vakfi-T3-Vakfi.jpg" alt="T3 Vakfı" class="t3-logo">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Presentation View -->
+        <section id="view-presentation" class="view">
+            <div class="presentation-container">
+                <div id="slide-content" class="slide-card glass">
+                    <!-- Slide content injected here -->
+                </div>
+                
+                <div class="presentation-controls">
+                    <button id="prev-slide" class="slide-nav-btn" title="Geri"><i class="fas fa-arrow-left"></i></button>
+                    
+                    <div class="nav-jump-group">
+                        <input type="number" id="jump-input" min="1" max="36" placeholder="No" class="jump-input">
+                        <button onclick="App.jumpToInput()" class="btn-jump">GİT</button>
+                    </div>
+
+                    <span id="slide-number" onclick="App.toggleSlideMenu()" class="slide-indicator" title="Tüm Listeyi Gör">
+                        1 / 36
+                    </span>
+
+                    <button id="next-slide" class="slide-nav-btn" title="İleri"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                
+                <!-- Slayt Hızlı Menü -->
+                <div id="slide-menu" class="slide-menu hidden">
+                    <div class="slide-menu-content">
+                        <h3>Slayt Listesi</h3>
+                        <div id="slide-grid" class="slide-grid"></div>
+                        <button class="btn-secondary" onclick="App.toggleSlideMenu()" style="margin-top: 20px;">Kapat</button>
+                    </div>
+                </div>
+
+                <div id="speaker-notes" class="speaker-notes hidden">
+                    <h3>Konuşmacı Notları</h3>
+                    <p id="notes-text"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lab View (Simulations) -->
+        <section id="view-lab" class="view">
+            <div class="lab-layout">
+                <aside class="lab-sidebar glass">
+                    <h3>Simülasyonlar</h3>
+                    <ul id="sim-list">
+                        <!-- Simulation list injected here -->
+                    </ul>
+                    <hr>
+                    <h3>Programlama</h3>
+                    <ul id="prog-list">
+                        <!-- Programming modules injected here -->
+                    </ul>
+                </aside>
+                
+                <main class="lab-main glass">
+                    <div id="lab-header">
+                        <h2 id="sim-title">Simülasyon Adı</h2>
+                        <p id="sim-desc">Simülasyon açıklaması burada yer alacak.</p>
+                    </div>
+                    
+                    <div class="simulation-canvas-area">
+                        <canvas id="sim-canvas"></canvas>
+                        <div id="sim-ui-overlay"></div>
+                    </div>
+
+                    <div class="lab-controls-footer">
+                        <div id="sim-controls" class="controls-panel">
+                            <!-- Dynamic controls injected here -->
+                        </div>
+                        
+                        <div id="code-logic-box" class="code-panel hidden">
+                            <div class="code-header">
+                                <span>Kod Mantığı</span>
+                                <button class="close-code">×</button>
+                            </div>
+                            <pre><code id="code-display"></code></pre>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </section>
+
+        <!-- Quiz View -->
+        <section id="view-quiz" class="view">
+            <div class="quiz-container glass">
+                <div id="quiz-intro">
+                    <h2>Kuantum Bilgi Testi</h2>
+                    <p>Öğrendiklerini test etmeye hazır mısın? 10 soruluk mini testimize başla.</p>
+                    <button id="start-quiz-btn" class="btn-primary">Testi Başlat</button>
+                </div>
+                <div id="quiz-content" class="hidden">
+                    <div class="quiz-progress">
+                        <div id="progress-bar"></div>
+                    </div>
+                    <h3 id="quiz-question">Soru metni?</h3>
+                    <div id="quiz-options" class="options-grid"></div>
+                </div>
+                <div id="quiz-result" class="hidden">
+                    <h2>Test Tamamlandı!</h2>
+                    <p id="score-text">Skorun: 0 / 10</p>
+                    <button id="retry-quiz-btn" class="btn-secondary">Tekrar Dene</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dictionary View -->
+        <section id="view-dictionary" class="view">
+            <div class="dictionary-container glass">
+                <h2>Kuantum Sözlüğü</h2>
+                <div class="search-box">
+                    <input type="text" id="dict-search" placeholder="Kavram ara...">
+                </div>
+                <div id="dict-list" class="dict-grid"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/complex.js"></script>
+    <script src="js/linearAlgebra.js"></script>
+    <script src="js/quantumGates.js"></script>
+    <script src="js/quantumCircuit.js"></script>
+    <script src="js/slides.js"></script>
+    <script src="js/simulations.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
