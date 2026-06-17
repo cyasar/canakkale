@@ -183,7 +183,10 @@ const Simulations = {
 
             this.animationId = requestAnimationFrame(animate);
         };
-           doubleslit(isUpdate) {
+        animate();
+    },
+
+    doubleslit(isUpdate) {
         this.updateUI("Çift Yarık Deneyi", "Ölçüm yapıldığında dalga fonksiyonu çöker.");
         if (!isUpdate) {
             this.params = { measure: false };
