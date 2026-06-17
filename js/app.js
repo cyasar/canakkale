@@ -186,7 +186,10 @@ const App = {
             { id: 'tunneling', name: 'Kuantum Tünelleme' },
             { id: 'sterngerlach', name: 'Stern-Gerlach Deneyi' },
             { id: 'schrodinger', name: 'Schrödinger\'in Kedisi' },
-            { id: 'machzehnder', name: 'Mach-Zehnder İnterferometresi' }
+            { id: 'machzehnder', name: 'Mach-Zehnder İnterferometresi' },
+            { id: 'zeno', name: 'Kuantum Zeno Etkisi' },
+            { id: 'eraser', name: 'Kuantum Silgisi' },
+            { id: 'chsh', name: 'CHSH Oyunu' }
         ];
         const list = document.getElementById('sim-list');
         list.innerHTML = sims.map(s => `<li onclick="App.loadSim('${s.id}')" id="link-${s.id}">${s.name}</li>`).join('');
@@ -216,6 +219,7 @@ const App = {
     loadProg(id) {
         // Programlama modülleri için özel simülasyonlar tetiklenecek
         if (id === 'complex') this.loadSim('complexSim');
+        if (id === 'linear') this.loadSim('linearSim');
         if (id === 'circuit') this.loadSim('circuitSim');
         if (id === 'coinFlip') this.loadSim('coinFlip');
         if (id === 'groverSearch') this.loadSim('groverSearch');

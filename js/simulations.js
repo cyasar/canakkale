@@ -1981,149 +1981,6 @@ Simulations.schrodinger = function(isUpdate) {
     animate();
 };
 
-Simulations.machzehnder = function(isUpdate) {
-    this.updateUI("Mach-Zehnder İnterferometresi", "Girişim deseni ve parçacık/dalga ikiliği.");
-    
-    if (!isUpdate) {
-        this.params = { blockPath: false };
-        this.state.photons = [];
-    }
-    
-    this.createControl("Alt Yola Engel Koy (Ölçüm Yap)", "blockPath", null, null, null, "checkbox");
-
-    const animate = () => {
-        this.ctx.fillStyle = '#05070a';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        const bs1 = {x: 200, y: 300};
-        const m1 = {x: 200, y: 150};
-        const m2 = {x: 500, y: 300};
-        const bs2 = {x: 500, y: 150};
-        const det1 = {x: 650, y: 150}; // Detector 1 (Interference)
-        const det2 = {x: 500, y: 50};  // Detector 2
-
-        // Draw paths
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(50, bs1.y); this.ctx.lineTo(m2.x, m2.y); // Bottom path
-        this.ctx.moveTo(bs1.x, bs1.y); this.ctx.lineTo(m1.x, m1.y); this.ctx.lineTo(bs2.x, bs2.y); // Top path
-        this.ctx.moveTo(m2.x, m2.y); this.ctx.lineTo(bs2.x, bs2.y); // M2 to BS2
-        this.ctx.moveTo(bs2.x, bs2.y); this.ctx.lineTo(det1.x, det1.y); // to D1
-        this.ctx.moveTo(bs2.x, bs2.y); this.ctx.lineTo(det2.x, det2.y); // to D2
-        this.ctx.stroke();
-
-        // Draw components
-        this.ctx.fillStyle = '#00f2ff';
-        this.ctx.fillRect(bs1.x - 5, bs1.y - 25, 10, 50); // BS1
-        this.ctx.fillRect(bs2.x - 5, bs2.y - 25, 10, 50); // BS2
-        
-        this.ctx.fillStyle = '#bc13fe';
-        this.ctx.fillRect(m1.x - 25, m1.y - 5, 50, 10); // M1
-        this.ctx.fillRect(m2.x - 5, m2.y - 25, 10, 50); // M2
-
-        // Block
-        if (this.params.blockPath) {
-            this.ctx.fillStyle = '#ff3914';
-            this.ctx.fillRect(350, 280, 20, 40);
-            this.ctx.font = '14px Space Grotesk';
-            this.ctx.fillText("ENGEL", 340, 340);
-        }
-
-        // Detectors
-        this.ctx.fillStyle = '#fff';
-        this.ctx.fillRect(det1.x, det1.y - 15, 30, 30);
-        this.ctx.fillText("D1", det1.x + 35, det1.y + 5);
-        this.ctx.fillRect(det2.x - 15, det2.y - 30, 30, 30);
-        this.ctx.fillText("D2", det2.x - 10, det2.y - 40);
-
-        // Emit photon
-        if (Math.random() < 0.05) {
-            this.state.photons.push({ x: 50, y: bs1.y, path: 'start', state: 'superposition' });
-        }
-
-        // Update photons
-        this.ctx.fillStyle = '#39ff14';
-        this.state.photons.forEach((p, i) => {
-            const speed = 4;
-            if (p.path === 'start') {
-                p.x += speed;
-                if (p.x >= bs1.x) {
-                    p.x = bs1.x;
-                    p.path = 'split';
-                    p.yTop = bs1.y;
-                    p.yBot = bs1.y;
-                    p.xTop = bs1.x;
-                    p.xBot = bs1.x;
-                }
-                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
-            } else if (p.path === 'split') {
-                if (this.params.blockPath && p.xBot >= 350) {
-                    // Blocked! Wave collapses to top path only
-                    p.state = 'collapsed';
-                    p.path = 'topOnly';
-                } else {
-                    p.yTop -= speed;
-                    p.xBot += speed;
-                    
-                    if (p.yTop <= m1.y) p.yTop = m1.y;
-                    if (p.xBot >= m2.x) p.xBot = m2.x;
-
-                    if (p.yTop === m1.y) p.xTop += speed;
-                    if (p.xBot === m2.x) p.yBot -= speed;
-
-                    if (p.xTop >= bs2.x && p.yBot <= bs2.y) {
-                        p.path = 'recombine';
-                        p.x = bs2.x;
-                        p.y = bs2.y;
-                    }
-                    
-                    this.ctx.globalAlpha = 0.5;
-                    this.ctx.beginPath(); this.ctx.arc(p.xTop, p.yTop, 4, 0, Math.PI*2); this.ctx.fill();
-                    if (!(this.params.blockPath && p.xBot >= 350)) {
-                        this.ctx.beginPath(); this.ctx.arc(p.xBot, p.yBot, 4, 0, Math.PI*2); this.ctx.fill();
-                    }
-                    this.ctx.globalAlpha = 1.0;
-                }
-            } else if (p.path === 'topOnly') {
-                p.yTop -= speed;
-                if (p.yTop <= m1.y) p.yTop = m1.y;
-                if (p.yTop === m1.y) p.xTop += speed;
-                if (p.xTop >= bs2.x) {
-                    p.path = 'recombine_collapsed';
-                    p.x = bs2.x;
-                    p.y = bs2.y;
-                    // Random choice at BS2 since no interference
-                    p.finalDir = Math.random() > 0.5 ? 'D1' : 'D2';
-                }
-                this.ctx.beginPath(); this.ctx.arc(p.xTop, p.yTop, 4, 0, Math.PI*2); this.ctx.fill();
-            } else if (p.path === 'recombine') {
-                // Constructive interference to D1, destructive to D2
-                p.x += speed;
-                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
-                if (p.x >= det1.x) this.state.photons.splice(i, 1);
-            } else if (p.path === 'recombine_collapsed') {
-                if (p.finalDir === 'D1') p.x += speed;
-                else p.y -= speed;
-                
-                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
-                if (p.x >= det1.x || p.y <= det2.y) this.state.photons.splice(i, 1);
-            }
-        });
-
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = '14px Space Grotesk';
-        if (this.params.blockPath) {
-            this.ctx.fillText("Girişim Yok. Foton D1 veya D2'ye gidebilir (%50).", 50, 450);
-        } else {
-            this.ctx.fillText("Dalga Girişimi Var. Foton DAİMA D1'e ulaşır.", 50, 450);
-        }
-
-        this.animationId = requestAnimationFrame(animate);
-    };
-    animate();
-};
-
 Simulations.shorAlgorithm = function(isUpdate) {
     this.updateUI("Shor Algoritması (Çarpanlara Ayırma)", "Kuantum periyot bulma ile şifre kırmanın temeli.");
     
@@ -2258,6 +2115,559 @@ Simulations.qrng = function(isUpdate) {
                 this.state.qBits = [];
                 this.state.cBits = [];
             }, 3000);
+        }
+
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+
+Simulations.complexSim = function(isUpdate) {
+    this.updateUI("Karmaşık Sayılar", "Gerçel ve Sanal eksenlerde vektör gösterimi. z = a + bi");
+    
+    if (!isUpdate) {
+        this.params = { real: 3, imag: 4 };
+    }
+    this.createControl("Gerçel Kısım (a)", "real", -10, 10, 1);
+    this.createControl("Sanal Kısım (b)", "imag", -10, 10, 1);
+
+    const animate = () => {
+        this.ctx.fillStyle = '#05070a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+        const scale = 20;
+
+        // Draw axes
+        this.ctx.strokeStyle = '#444';
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, cy); this.ctx.lineTo(this.canvas.width, cy); // Real
+        this.ctx.moveTo(cx, 0); this.ctx.lineTo(cx, this.canvas.height); // Imag
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#888';
+        this.ctx.font = '16px Space Grotesk';
+        this.ctx.fillText("Gerçel Eksen (Re)", this.canvas.width - 150, cy - 10);
+        this.ctx.fillText("Sanal Eksen (Im)", cx + 10, 20);
+
+        const r = this.params.real;
+        const i = this.params.imag;
+        
+        const vx = cx + r * scale;
+        const vy = cy - i * scale;
+
+        // Draw vector
+        this.ctx.strokeStyle = '#00f2ff';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx, cy);
+        this.ctx.lineTo(vx, vy);
+        this.ctx.stroke();
+        
+        this.ctx.fillStyle = '#00f2ff';
+        this.ctx.beginPath();
+        this.ctx.arc(vx, vy, 5, 0, Math.PI*2);
+        this.ctx.fill();
+
+        // Info
+        const mag = Math.sqrt(r*r + i*i).toFixed(2);
+        const phase = (Math.atan2(i, r) * 180 / Math.PI).toFixed(1);
+        
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '20px Space Grotesk';
+        this.ctx.fillText(`z = ${r} ${i >= 0 ? '+' : '-'} ${Math.abs(i)}i`, cx + 20, cy + 30);
+        this.ctx.fillText(`|z| (Genlik) = ${mag}`, cx + 20, cy + 60);
+        this.ctx.fillText(`θ (Faz) = ${phase}°`, cx + 20, cy + 90);
+
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+Simulations.linearSim = function(isUpdate) {
+    this.updateUI("Lineer Cebir (Kuantum Kapıları)", "Kuantum durumlarına matris (kapı) uygulanması (Örn: X Kapısı).");
+    
+    if (!isUpdate) {
+        this.params = { state: '0' }; // '0', '1', '+', '-'
+    }
+    
+    const controls = document.getElementById('sim-controls');
+    if (!isUpdate) {
+        controls.innerHTML = '';
+        
+        const btnX = document.createElement('button');
+        btnX.innerText = "Pauli-X Uygula (NOT)";
+        btnX.className = "btn-primary";
+        btnX.style.marginRight = "10px";
+        btnX.onclick = () => {
+            if (this.params.state === '0') this.params.state = '1';
+            else if (this.params.state === '1') this.params.state = '0';
+        };
+        controls.appendChild(btnX);
+
+        const btnH = document.createElement('button');
+        btnH.innerText = "Hadamard Uygula (H)";
+        btnH.className = "btn-primary";
+        btnH.onclick = () => {
+            if (this.params.state === '0') this.params.state = '+';
+            else if (this.params.state === '1') this.params.state = '-';
+            else if (this.params.state === '+') this.params.state = '0';
+            else if (this.params.state === '-') this.params.state = '1';
+        };
+        controls.appendChild(btnH);
+    }
+
+    const animate = () => {
+        this.ctx.fillStyle = '#05070a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '30px Space Grotesk';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`Mevcut Durum: |${this.params.state}⟩`, cx, cy - 100);
+
+        // Draw Matrix representation
+        this.ctx.font = '24px Courier New';
+        this.ctx.fillStyle = '#00f2ff';
+        if (this.params.state === '0') {
+            this.ctx.fillText("[ 1 ]", cx, cy + 20);
+            this.ctx.fillText("[ 0 ]", cx, cy + 50);
+        } else if (this.params.state === '1') {
+            this.ctx.fillText("[ 0 ]", cx, cy + 20);
+            this.ctx.fillText("[ 1 ]", cx, cy + 50);
+        } else if (this.params.state === '+') {
+            this.ctx.fillText("[ 0.707 ]", cx, cy + 20);
+            this.ctx.fillText("[ 0.707 ]", cx, cy + 50);
+        } else if (this.params.state === '-') {
+            this.ctx.fillText("[  0.707 ]", cx, cy + 20);
+            this.ctx.fillText("[ -0.707 ]", cx, cy + 50);
+        }
+
+        this.ctx.fillStyle = '#888';
+        this.ctx.font = '16px Space Grotesk';
+        this.ctx.fillText("Lineer Cebirde kuantum kapıları matris, durumlar vektördür.", cx, cy + 120);
+
+        this.ctx.textAlign = 'left';
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+Simulations.zeno = function(isUpdate) {
+    this.updateUI("Kuantum Zeno Etkisi", "Sürekli ölçülen bir kuantum sistemi evrimleşemez. (İzlenen çaydanlık kaynamaz).");
+    
+    if (!isUpdate) {
+        this.state.progress = 0; // 0 (Mavi) to 1 (Kırmızı)
+    }
+
+    const controls = document.getElementById('sim-controls');
+    if (!isUpdate) {
+        controls.innerHTML = '';
+        const btn = document.createElement('button');
+        btn.innerText = "GÖZLEMLE (ÖLÇÜM YAP)";
+        btn.className = "btn-primary";
+        btn.onmousedown = () => {
+            // Collapse back to initial state 0
+            this.state.progress = 0;
+            this.state.isObserving = true;
+        };
+        btn.onmouseup = () => { this.state.isObserving = false; };
+        btn.onmouseleave = () => { this.state.isObserving = false; };
+        controls.appendChild(btn);
+    }
+
+    const animate = () => {
+        this.ctx.fillStyle = '#05070a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+
+        if (!this.state.isObserving && this.state.progress < 1) {
+            this.state.progress += 0.005; // Natural evolution
+        }
+
+        if (this.state.progress >= 1) this.state.progress = 1;
+
+        // Color interpolation: Blue (0, 242, 255) to Red (255, 57, 20)
+        const r = Math.round(0 + this.state.progress * 255);
+        const g = Math.round(242 - this.state.progress * 185);
+        const b = Math.round(255 - this.state.progress * 235);
+        const color = `rgb(${r}, ${g}, ${b})`;
+
+        this.ctx.shadowBlur = 50;
+        this.ctx.shadowColor = color;
+        this.ctx.fillStyle = color;
+        
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, 100, 0, Math.PI*2);
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '24px Space Grotesk';
+        this.ctx.textAlign = 'center';
+        if (this.state.progress === 1) {
+            this.ctx.fillText("DURUM: 1 (Tamamen Evrimleşti)", cx, cy + 150);
+        } else if (this.state.progress === 0) {
+            this.ctx.fillText("DURUM: 0 (Başlangıç)", cx, cy + 150);
+        } else {
+            this.ctx.fillText(`Süperpozisyon... %${Math.round(this.state.progress * 100)}`, cx, cy + 150);
+        }
+
+        this.ctx.font = '16px Space Grotesk';
+        this.ctx.fillStyle = '#888';
+        this.ctx.fillText("Durum 1'e dönüşmesini engellemek için sürekli 'Gözlemle'ye basın.", cx, cy + 190);
+
+        this.ctx.textAlign = 'left';
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+Simulations.eraser = function(isUpdate) {
+    this.updateUI("Kuantum Silgisi (Gecikmiş Seçim)", "Hangi yarıktan geçtiği bilgisini ölçerseniz dalga çöker. Bilgiyi silerseniz geri döner!");
+    
+    if (!isUpdate) {
+        this.params = { mode: 'normal' }; // normal, measure, erase
+        this.state.particles = [];
+        this.state.pattern = new Array(100).fill(0);
+    }
+    
+    const controls = document.getElementById('sim-controls');
+    if (!isUpdate) {
+        controls.innerHTML = '';
+        const modes = [
+            { id: 'normal', name: "1. Normal Çift Yarık" },
+            { id: 'measure', name: "2. Dedektör ile Ölç" },
+            { id: 'erase', name: "3. Kuantum Silgisi (Bilgiyi Sil)" }
+        ];
+        
+        modes.forEach(m => {
+            const btn = document.createElement('button');
+            btn.innerText = m.name;
+            btn.className = "btn-secondary";
+            btn.style.margin = "5px";
+            btn.onclick = () => {
+                this.params.mode = m.id;
+                this.state.pattern = new Array(100).fill(0); // Reset screen
+            };
+            controls.appendChild(btn);
+        });
+    }
+
+    const animate = () => {
+        this.ctx.fillStyle = 'rgba(5, 7, 10, 0.2)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const slitX = 200, screenX = this.canvas.width - 100, midY = this.canvas.height / 2;
+        
+        // Draw slits
+        this.ctx.fillStyle = '#444';
+        this.ctx.fillRect(slitX, 0, 15, midY - 60);
+        this.ctx.fillRect(slitX, midY - 20, 15, 40);
+        this.ctx.fillRect(slitX, midY + 60, 15, this.canvas.height);
+
+        if (this.params.mode === 'measure') {
+            this.ctx.fillStyle = '#ff3914';
+            this.ctx.fillText("👁️ Ölçüm Dedektörü AKTİF", slitX - 80, midY - 80);
+        } else if (this.params.mode === 'erase') {
+            this.ctx.fillStyle = '#39ff14';
+            this.ctx.fillText("🧽 Dedektör Açık Ama Bilgi SİLİNDİ", slitX - 100, midY - 80);
+        }
+
+        if (Math.random() < 0.2) {
+            this.state.particles.push({ x: 0, y: midY + (Math.random() - 0.5) * 100, passed: false, angle: 0 });
+        }
+
+        this.state.particles.forEach((p, i) => {
+            p.x += 5;
+            if (!p.passed && p.x >= slitX) {
+                p.passed = true;
+                if (this.params.mode === 'measure') {
+                    // Particle behavior (two bands)
+                    p.y = Math.random() > 0.5 ? midY - 40 : midY + 40;
+                    p.angle = (Math.random() - 0.5) * 0.1;
+                } else {
+                    // Wave behavior (interference) for 'normal' and 'erase'
+                    let rand = Math.random();
+                    for(let a = -0.6; a <= 0.6; a += 0.01) {
+                        if (rand < Math.pow(Math.cos(a * 10), 2) * 0.1) { p.angle = a; break; }
+                    }
+                }
+            }
+            
+            if (p.passed) p.y += Math.sin(p.angle) * 10;
+            
+            this.ctx.fillStyle = this.params.mode === 'measure' ? '#ff3914' : '#00f2ff';
+            this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 3, 0, Math.PI*2); this.ctx.fill();
+            
+            if (p.x >= screenX) {
+                const idx = Math.floor((p.y / this.canvas.height) * 100);
+                if (idx >= 0 && idx < 100) this.state.pattern[idx]++;
+                this.state.particles.splice(i, 1);
+            }
+        });
+
+        // Screen
+        this.ctx.fillStyle = '#111'; this.ctx.fillRect(screenX, 0, 60, this.canvas.height);
+        this.state.pattern.forEach((val, idx) => {
+            const y = (idx / 100) * this.canvas.height;
+            this.ctx.fillStyle = this.params.mode === 'measure' ? 'rgba(255, 57, 20, 0.6)' : 'rgba(0, 242, 255, 0.6)';
+            this.ctx.fillRect(screenX + 2, y, Math.min(val * 2, 55), this.canvas.height/100);
+        });
+
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+Simulations.chsh = function(isUpdate) {
+    this.updateUI("CHSH Oyunu (Kuantum Üstünlüğü)", "Klasik fizik maksimum %75 kazanır. Kuantum dolanıklık %85 kazandırır!");
+    
+    if (!isUpdate) {
+        this.state.round = 0;
+        this.state.wins = 0;
+        this.state.strategy = 'classical'; // classical or quantum
+    }
+
+    const controls = document.getElementById('sim-controls');
+    if (!isUpdate) {
+        controls.innerHTML = '';
+        const btnC = document.createElement('button');
+        btnC.innerText = "KLASİK STRATEJİ BAŞLAT";
+        btnC.className = "btn-secondary";
+        btnC.onclick = () => { this.state.round = 0; this.state.wins = 0; this.state.strategy = 'classical'; };
+        
+        const btnQ = document.createElement('button');
+        btnQ.innerText = "KUANTUM (DOLANIK) STRATEJİ BAŞLAT";
+        btnQ.className = "btn-primary";
+        btnQ.onclick = () => { this.state.round = 0; this.state.wins = 0; this.state.strategy = 'quantum'; };
+        
+        controls.appendChild(btnC);
+        controls.appendChild(btnQ);
+    }
+
+    const animate = () => {
+        this.ctx.fillStyle = '#05070a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const cx = this.canvas.width / 2;
+        
+        if (this.state.round < 1000) {
+            this.state.round += 5; // Fast play
+            // In CHSH, win condition probability: Classical <= 0.75, Quantum <= cos^2(pi/8) ~ 0.853
+            const winProb = this.state.strategy === 'classical' ? 0.75 : 0.853;
+            for(let i=0; i<5; i++) {
+                if (Math.random() < winProb) this.state.wins++;
+            }
+        }
+
+        const winRate = this.state.round > 0 ? (this.state.wins / this.state.round * 100).toFixed(1) : 0;
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '24px Space Grotesk';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`Oynanan Tur: ${this.state.round} / 1000`, cx, 100);
+        
+        this.ctx.font = '60px Space Grotesk';
+        this.ctx.fillStyle = this.state.strategy === 'classical' ? '#ff3914' : '#39ff14';
+        this.ctx.fillText(`Kazanma Oranı: %${winRate}`, cx, 200);
+
+        this.ctx.font = '18px Space Grotesk';
+        this.ctx.fillStyle = '#888';
+        this.ctx.fillText("Klasik Fizik Sınırı (Bell Eşitsizliği): %75", cx, 300);
+        this.ctx.fillText("Kuantum Sınırı (Tsirelson Sınırı): %85.3", cx, 340);
+
+        // Bar chart
+        this.ctx.fillStyle = '#333';
+        this.ctx.fillRect(cx - 200, 400, 400, 40);
+        this.ctx.fillStyle = this.state.strategy === 'classical' ? '#ff3914' : '#39ff14';
+        this.ctx.fillRect(cx - 200, 400, (winRate / 100) * 400, 40);
+        
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(cx - 200 + 0.75 * 400, 390, 4, 60); // 75% limit line
+        this.ctx.fillText("Klasik Limit", cx - 200 + 0.75 * 400, 470);
+
+        this.ctx.textAlign = 'left';
+        this.animationId = requestAnimationFrame(animate);
+    };
+    animate();
+};
+
+
+Simulations.machzehnder = function(isUpdate) {
+    this.updateUI("Mach-Zehnder İnterferometresi", "Girişim deseni ve parçacık/dalga ikiliği.");
+    
+    if (!isUpdate) {
+        this.params = { blockPath: false };
+        this.state.photons = [];
+        this.state.countD1 = 0;
+        this.state.countD2 = 0;
+    }
+    
+    const controls = document.getElementById('sim-controls');
+    if (!isUpdate) {
+        controls.innerHTML = '';
+        this.createControl("Alt Yola Engel Koy (Ölçüm Yap)", "blockPath", null, null, null, "checkbox");
+        
+        const resetBtn = document.createElement('button');
+        resetBtn.innerText = "SAYAÇLARI SIFIRLA";
+        resetBtn.className = "btn-secondary";
+        resetBtn.style.marginTop = "10px";
+        resetBtn.style.display = "block";
+        resetBtn.onclick = () => {
+            this.state.countD1 = 0;
+            this.state.countD2 = 0;
+        };
+        controls.appendChild(resetBtn);
+    }
+
+    const animate = () => {
+        this.ctx.fillStyle = '#05070a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+        
+        const bs1 = { x: cx - 200, y: cy }; // Beam splitter 1
+        const bs2 = { x: cx + 200, y: cy - 150 }; // Beam splitter 2
+        const m1 = { x: cx + 200, y: cy }; // Mirror 1
+        const m2 = { x: cx - 200, y: cy - 150 }; // Mirror 2
+        
+        const det1 = { x: cx + 300, y: cy - 150 }; // D1
+        const det2 = { x: cx + 200, y: cy - 250 }; // D2
+
+        // Draw paths
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        // Path 1 (Lower)
+        this.ctx.moveTo(cx - 300, cy);
+        this.ctx.lineTo(m1.x, m1.y);
+        this.ctx.lineTo(bs2.x, bs2.y);
+        // Path 2 (Upper)
+        this.ctx.moveTo(bs1.x, bs1.y);
+        this.ctx.lineTo(m2.x, m2.y);
+        this.ctx.lineTo(bs2.x, bs2.y);
+        
+        // To detectors
+        this.ctx.moveTo(bs2.x, bs2.y);
+        this.ctx.lineTo(det1.x, det1.y);
+        this.ctx.moveTo(bs2.x, bs2.y);
+        this.ctx.lineTo(det2.x, det2.y);
+        this.ctx.stroke();
+
+        // Draw components
+        this.ctx.fillStyle = '#00f2ff'; // Beam splitters
+        this.ctx.fillRect(bs1.x - 5, bs1.y - 40, 10, 80);
+        this.ctx.fillRect(bs2.x - 5, bs2.y - 40, 10, 80);
+        
+        this.ctx.fillStyle = '#a200ff'; // Mirrors
+        this.ctx.fillRect(m1.x - 5, m1.y - 40, 10, 80);
+        this.ctx.fillRect(m2.x - 40, m2.y - 5, 80, 10);
+
+        // Detectors
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(det1.x, det1.y - 15, 30, 30);
+        this.ctx.fillText(`D1: ${this.state.countD1}`, det1.x + 35, det1.y + 5);
+        this.ctx.fillRect(det2.x - 15, det2.y - 30, 30, 30);
+        this.ctx.fillText(`D2: ${this.state.countD2}`, det2.x - 10, det2.y - 40);
+
+        if (this.params.blockPath) {
+            this.ctx.fillStyle = '#ff3914';
+            this.ctx.fillRect(cx - 10, cy - 20, 20, 40);
+        }
+
+        if (Math.random() < 0.05) {
+            this.state.photons.push({ x: cx - 300, y: cy, path: 'initial' });
+        }
+
+        const speed = 4;
+        this.ctx.fillStyle = '#39ff14';
+
+        for (let i = this.state.photons.length - 1; i >= 0; i--) {
+            let p = this.state.photons[i];
+            
+            if (p.path === 'initial') {
+                p.x += speed;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                if (p.x >= bs1.x) {
+                    if (this.params.blockPath) {
+                        p.path = Math.random() > 0.5 ? 'lower_collapsed' : 'upper_collapsed';
+                    } else {
+                        // Superposition
+                        p.path = 'superposition';
+                        p.x2 = p.x; p.y2 = p.y;
+                    }
+                }
+            } else if (p.path === 'superposition') {
+                p.x += speed; // lower path
+                p.y2 -= speed; // upper path
+                
+                this.ctx.globalAlpha = 0.5;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                this.ctx.beginPath(); this.ctx.arc(p.x2, p.y2, 4, 0, Math.PI*2); this.ctx.fill();
+                this.ctx.globalAlpha = 1.0;
+
+                if (p.x >= m1.x) { p.y -= speed; p.x = m1.x; }
+                if (p.y2 <= m2.y) { p.x2 += speed; p.y2 = m2.y; }
+
+                if (p.y <= bs2.y || p.x2 >= bs2.x) {
+                    p.path = 'recombine';
+                    p.x = bs2.x; p.y = bs2.y;
+                }
+            } else if (p.path === 'lower_collapsed') {
+                p.x += speed;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                if (p.x >= cx) {
+                    // Blocked!
+                    this.state.photons.splice(i, 1);
+                    continue;
+                }
+            } else if (p.path === 'upper_collapsed') {
+                if (p.y > m2.y) p.y -= speed;
+                else p.x += speed;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                
+                if (p.x >= bs2.x) {
+                    p.path = 'recombine_collapsed';
+                    p.finalDir = Math.random() > 0.5 ? 'D1' : 'D2';
+                }
+            } else if (p.path === 'recombine') {
+                // Constructive interference to D1
+                p.x += speed;
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                if (p.x >= det1.x) {
+                    this.state.countD1++;
+                    this.state.photons.splice(i, 1);
+                }
+            } else if (p.path === 'recombine_collapsed') {
+                if (p.finalDir === 'D1') p.x += speed;
+                else p.y -= speed;
+                
+                this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 4, 0, Math.PI*2); this.ctx.fill();
+                if (p.x >= det1.x) {
+                    this.state.countD1++;
+                    this.state.photons.splice(i, 1);
+                } else if (p.y <= det2.y) {
+                    this.state.countD2++;
+                    this.state.photons.splice(i, 1);
+                }
+            }
+        }
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '18px Space Grotesk';
+        if (this.params.blockPath) {
+            this.ctx.fillText("Hangi yol ölçümü yapıldı. Dalga çöktü. D1 ve D2'ye %50-%50 gider.", cx - 200, cy + 150);
+        } else {
+            this.ctx.fillText("Dalga Girişimi Var. Foton DAİMA D1'e ulaşır.", cx - 200, cy + 150);
         }
 
         this.animationId = requestAnimationFrame(animate);
