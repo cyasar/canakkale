@@ -182,7 +182,11 @@ const App = {
             { id: 'superposition', name: 'Süperpozisyon' },
             { id: 'entanglement', name: 'Dolanıklık' },
             { id: 'qkd', name: 'QKD (Şifreleme)' },
-            { id: 'mazeSim', name: 'Labirent Çözümü' }
+            { id: 'mazeSim', name: 'Labirent Çözümü' },
+            { id: 'tunneling', name: 'Kuantum Tünelleme' },
+            { id: 'sterngerlach', name: 'Stern-Gerlach Deneyi' },
+            { id: 'schrodinger', name: 'Schrödinger\'in Kedisi' },
+            { id: 'machzehnder', name: 'Mach-Zehnder İnterferometresi' }
         ];
         const list = document.getElementById('sim-list');
         list.innerHTML = sims.map(s => `<li onclick="App.loadSim('${s.id}')" id="link-${s.id}">${s.name}</li>`).join('');
@@ -195,7 +199,9 @@ const App = {
             { id: 'circuit', name: 'Devre Simülatörü' },
             { id: 'coinFlip', name: 'Kuantum Yazı-Tura' },
             { id: 'groverSearch', name: 'Grover Arama' },
-            { id: 'quantumTeleportation', name: 'Kuantum Işınlama' }
+            { id: 'quantumTeleportation', name: 'Kuantum Işınlama' },
+            { id: 'shorAlgorithm', name: 'Shor Algoritması' },
+            { id: 'qrng', name: 'Gerçek Rastgelelik (QRNG)' }
         ];
         const list = document.getElementById('prog-list');
         list.innerHTML = modules.map(m => `<li onclick="App.loadProg('${m.id}')">${m.name}</li>`).join('');
@@ -214,6 +220,8 @@ const App = {
         if (id === 'coinFlip') this.loadSim('coinFlip');
         if (id === 'groverSearch') this.loadSim('groverSearch');
         if (id === 'quantumTeleportation') this.loadSim('quantumTeleportation');
+        if (id === 'shorAlgorithm') this.loadSim('shorAlgorithm');
+        if (id === 'qrng') this.loadSim('qrng');
     },
 
     // --- QUIZ ---
